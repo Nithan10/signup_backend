@@ -5,13 +5,15 @@ const cors = require('cors');
 const sgMail = require('@sendgrid/mail');
 
 const app = express();
-app.use(express.json());
-app.use(cors());
 
-// Set SendGrid API Key securely
+// UPDATED: CORS configuration to allow your live frontend to communicate with this backend
+app.use(cors()); 
+app.use(express.json());
+
+// Set SendGrid API Key from Environment Variables
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
-// Connect to MongoDB
+// Connect to MongoDB Atlas (Cloud)
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('✅ MongoDB Connected'))
   .catch(err => console.error('❌ MongoDB Error:', err));
@@ -33,8 +35,9 @@ const sendEmail = async (toEmail, subject, text) => {
   };
   try {
     await sgMail.send(msg);
-    console.log(`✅ SendGrid Email successfully sent to ${toEmail}`);
+    console.log(`📧 SendGrid Email successfully sent to ${toEmail}`);
   } catch (error) {
+    // UPDATED: Enhanced error logging for debugging production email issues
     console.error('❌ SendGrid Error:', error.response ? JSON.stringify(error.response.body) : error.message);
   }
 };
@@ -57,7 +60,7 @@ app.post('/api/signup', async (req, res) => {
 
     res.status(201).json({ message: 'Account created successfully!' });
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error during signup' });
   }
 });
 
@@ -76,9 +79,12 @@ app.post('/api/login', async (req, res) => {
 
     res.status(200).json({ message: 'Login successful!' });
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error during login' });
   }
 });
 
+// UPDATED: Use process.env.PORT for Render deployment and bind to 0.0.0.0
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
